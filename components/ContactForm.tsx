@@ -15,6 +15,7 @@ import Script from "next/script"
 import { format } from "date-fns"
 import { ko } from "date-fns/locale"
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
+import { formatPhoneNumber } from "@/lib/utils"
 
 interface PlaceOption {
   value: string
@@ -149,6 +150,12 @@ export default function ContactForm() {
       setValue('installationDate', format(selectedDate, 'yyyy-MM-dd', { locale: ko }))
     }
   }, [selectedDate, setValue])
+  
+  // 전화번호 하이픈 자동 추가 핸들러
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formattedPhoneNumber = formatPhoneNumber(e.target.value)
+    setValue('phone', formattedPhoneNumber, { shouldValidate: true })
+  }
   
   // 주소 검색 팝업 열기
   const openAddressSearch = () => {
@@ -422,14 +429,16 @@ export default function ContactForm() {
                   {...register("phone", {
                     required: "연락처를 입력해주세요",
                     pattern: {
-                      value: /^01[0-9]{8,9}$/,
-                      message: "올바른 휴대폰 번호를 입력해주세요"
+                      value: /^[0-9]{3}-[0-9]{3,4}-[0-9]{4}$/,
+                      message: "올바른 전화번호 형식이 아닙니다 (예: 010-1234-5678)"
                     }
                   })}
-                  placeholder="(- 없이 숫자만 입력)"
+                  placeholder="연락처를 입력해주세요"
                   className={`focus:ring-2 focus:ring-primary ${errors.phone ? 'border-red-500' : ''}`}
+                  onChange={handlePhoneChange}
+                  value={watch("phone") || ""}
                 />
-                <p className="mt-1 text-xs text-gray-500">예시: 01012345678</p>
+                <p className="mt-1 text-xs text-gray-500">예시: 010-1234-5678</p>
                 {errors.phone && (
                   <p className="mt-1 text-xs text-red-500">{errors.phone.message}</p>
                 )}

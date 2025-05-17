@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Home, Store, School, Factory, Building, ChevronRight, Camera } from "lucide-react"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { submitConsultation } from "@/app/actions/submit"
+import { formatPhoneNumber } from "@/lib/utils"
 import Image from "next/image"
 
 interface PlaceOption {
@@ -47,45 +48,24 @@ const placeOptions: PlaceOption[] = [
 
 const cameraOptions = ["1대", "2대", "3대", "4대", "5대 이상"]
 
-// 성공 모달 컴포넌트
-const SuccessModal = () => {
-  return (
-    <div id="success-modal" className="fixed inset-0 flex items-center justify-center z-50 bg-black/70 hidden">
-      <div className="bg-white rounded-xl p-8 max-w-md w-full">
-        <div className="text-center">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-          </div>
-          <h3 className="text-2xl font-bold mb-4">상담 신청 완료!</h3>
-          <p className="text-gray-600 mb-6">
-            입력하신 정보로 상담 신청이 완료되었습니다.<br />
-            전문 상담사가 빠르게 연락 드리겠습니다.
-          </p>
-          <button 
-            onClick={() => {
-              document.getElementById('success-modal')?.classList.add('hidden')
-            }}
-            className="bg-primary text-white font-medium py-2 px-6 rounded-lg hover:bg-primary-dark transition-colors"
-          >
-            확인
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export default function ContactFormSimple() {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
   
   const { 
     register, 
     handleSubmit, 
     setValue,
+    watch,
+    reset,
     formState: { errors } 
   } = useForm()
+
+  // 전화번호 하이픈 자동 추가 핸들러
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formattedPhoneNumber = formatPhoneNumber(e.target.value)
+    setValue('phone', formattedPhoneNumber, { shouldValidate: true })
+  }
 
   const onSubmit = async (data: any) => {
     setIsSubmitting(true)
@@ -106,8 +86,11 @@ export default function ContactFormSimple() {
       })
       
       if (result.success) {
+        // 폼 초기화
+        reset()
+        
         // 성공 모달 표시
-        document.getElementById('success-modal')?.classList.remove('hidden')
+        setShowSuccessModal(true)
         
         // 토스트 메시지
         toast.success("상담 신청이 완료되었습니다.")
@@ -198,6 +181,8 @@ export default function ContactFormSimple() {
                     }
                   })}
                   className="w-full"
+                  onChange={handlePhoneChange}
+                  value={watch("phone") || ""}
                 />
                 {errors.phone && (
                   <p className="text-xs text-red-500 mt-1">{errors.phone.message as string}</p>
@@ -351,7 +336,44 @@ export default function ContactFormSimple() {
       </div>
       
       {/* 성공 모달 */}
-      <SuccessModal />
+      <AnimatePresence>
+        {showSuccessModal && (
+          <motion.div
+            className="fixed inset-0 flex items-center justify-center z-50 bg-black/70"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowSuccessModal(false)}
+          >
+            <motion.div 
+              className="bg-white rounded-xl p-8 max-w-md w-full"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="text-center">
+                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-bold mb-4">상담 신청 완료!</h3>
+                <p className="text-gray-600 mb-6">
+                  입력하신 정보로 상담 신청이 완료되었습니다.<br />
+                  전문 상담사가 빠르게 연락 드리겠습니다.
+                </p>
+                <button 
+                  onClick={() => setShowSuccessModal(false)}
+                  className="bg-primary text-white font-medium py-2 px-6 rounded-lg hover:bg-primary-dark transition-colors"
+                >
+                  확인
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.section>
   )
 }
