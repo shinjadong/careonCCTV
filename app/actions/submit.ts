@@ -274,8 +274,17 @@ export async function submitConsultation(data: {
         }
       }
       
+      // 주 스프레드시트에 저장
       const primaryResult = await saveToPrimarySheet(rowData)
       console.log('Primary 시트 저장 결과:', primaryResult)
+      
+      // 보조 스프레드시트에 저장
+      const secondaryResult = await saveToSecondarySheet(rowData)
+      console.log('Secondary 시트 저장 결과:', secondaryResult)
+      
+      // 세 번째 스프레드시트에 저장
+      const tertiaryResult = await saveToTertiarySheet(rowData)
+      console.log('Tertiary 시트 저장 결과:', tertiaryResult)
       
       // 성공적으로 처리됨
       return { 
