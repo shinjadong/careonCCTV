@@ -323,7 +323,7 @@ export default function ContactFormSimple() {
               </p>
               {/* 전화 연결 버튼 */}
               <a 
-                href="tel:1688-1373" 
+                href="tel:010-7469-4385" 
                 className="absolute bottom-0 right-0 md:bottom-auto md:top-0 w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center shadow-md hover:bg-gray-600 transition-colors duration-300"
                 aria-label="전화 상담하기"
               >
