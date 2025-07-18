@@ -6,14 +6,12 @@ import Service from "@/components/Service"
 import CheckList from "@/components/CheckList"
 import BrandSection from "@/components/BrandSection"
 import CharmingOffer from "@/components/CharmingOffer"
-// Essential 컴포넌트 제거
 import EssentialBanner from "@/components/EssentialBanner"
 import FAQSection from "@/components/FAQSection"
 import ContactFormSimple from "@/components/ContactFormSimple"
 import Footer from "@/components/Footer"
 import FloatingButton from "@/components/FloatingButton"
 import FeatureExplanation from "@/components/FeatureExplanation"
-import Image from "next/image"
 
 export default function Home() {
   return (

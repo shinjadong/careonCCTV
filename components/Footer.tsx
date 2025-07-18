@@ -13,7 +13,7 @@ export default function Footer() {
           <div>
             <h3 className="text-xs font-medium mb-2 text-gray-500">고객 지원</h3>
             <p className="text-[10px] text-gray-500 leading-tight">이메일 : support@safetyzone119.com</p>
-            <p className="text-[10px] text-gray-500 leading-tight">전화 : 010-7469-4385</p>
+            <p className="text-[10px] text-gray-500 leading-tight">전화 : 1866-1845</p>
             <p className="text-[10px] text-gray-500 leading-tight">운영시간 : 평일 09:00 - 18:00</p>
           </div>
         </div>
