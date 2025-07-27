@@ -186,35 +186,35 @@ export default function ContactForm() {
     try {
       setIsSubmitting(true)
       
-      // 서버 액션 호출
+      // 서버 액션 호출 (통일된 데이터 구조)
       const result = await submitConsultation({
         name: data.name,
         phone: data.phone,
         place: data.placeType, // 설치 장소 유형
         contactTime: data.contactTime, // 연락 가능 시간
         address: data.address, // 주소지
-        installationDate: data.installationDate || "", // 설치희망일
+        installationDate: data.installationDate, // 설치희망일
         installationTime: data.installationTime, // 설치 희망 시간대
         cameraCount: data.cameraCount, // 희망 설치 대수
-        memo: data.description || "", // 추가 문의사항
+        memo: data.description, // 추가 문의사항
         privacy: data.privacy
       })
       
-      // 항상 성공으로 처리 (임시 수정)
-      // 10부터 30까지의 랜덤 대기번호 생성
-      const randomNumber = Math.floor(Math.random() * 21) + 10;
-      setWaitingNumber(randomNumber);
-      setShowSuccessModal(true);
-      reset()
+      if (result.success) {
+        // 10부터 30까지의 랜덤 대기번호 생성
+        const randomNumber = Math.floor(Math.random() * 21) + 10
+        setWaitingNumber(randomNumber)
+        setShowSuccessModal(true)
+        reset()
+        
+        toast.success(result.message || "견적 신청이 완료되었습니다.")
+      } else {
+        toast.error(result.error || "견적 신청 중 오류가 발생했습니다.")
+      }
       
     } catch (error) {
-      console.error("상담 신청 중 오류 발생:", error);
-      
-      // 오류가 발생해도 성공으로 처리 (임시 수정)
-      const randomNumber = Math.floor(Math.random() * 21) + 10;
-      setWaitingNumber(randomNumber);
-      setShowSuccessModal(true);
-      reset()
+      console.error("상담 신청 중 오류 발생:", error)
+      toast.error("견적 신청 중 오류가 발생했습니다. 다시 시도해주세요.")
     } finally {
       setIsSubmitting(false)
     }

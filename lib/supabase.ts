@@ -21,21 +21,21 @@ export interface ConsultationData {
 
 export type ConsultationInsert = Omit<ConsultationData, 'id' | 'created_at' | 'updated_at'>
 
-// 견적 신청 테이블 타입 정의 (업데이트된 컬럼 구조)
+// 견적 신청 테이블 타입 정의 (최종 estimate 테이블 스키마와 100% 일치)
 export interface EstimateData {
   id?: string
   name: string
   phone: string
-  address?: string
+  address: string
   place_type?: string
   business_type?: string
   total_camera_count?: number
   estimated_price?: number
-  preferred_contact_time?: string
-  preferred_installation_date?: string
-  preferred_installation_time?: string
-  additional_notes?: string
-  privacy_consent?: boolean
+  preferred_contact_time: string
+  preferred_installation_date?: string  // 새로 추가된 컬럼
+  preferred_installation_time?: string  // 새로 추가된 컬럼
+  additional_notes?: string             // 새로 추가된 컬럼
+  privacy_consent?: boolean             // 새로 추가된 컬럼
   status?: string
   source?: string
   created_at?: string

@@ -71,36 +71,35 @@ export default function ContactFormSimple() {
     setIsSubmitting(true)
     
     try {
-      // 서버 액션 호출
+      // 서버 액션 호출 (통일된 데이터 구조)
       const result = await submitConsultation({
         name: data.name,
         phone: data.phone,
         contactTime: "언제든 가능",
         place: data.place,
-        address: data.region,
-        installationDate: "협의 후 결정",
-        installationTime: "협의 후 결정",
+        address: data.region, // region -> address로 매핑
+        installationDate: undefined, // ContactFormSimple에서는 수집하지 않음
+        installationTime: undefined, // ContactFormSimple에서는 수집하지 않음
         cameraCount: data.cameraCount,
-        memo: "",
+        memo: undefined, // ContactFormSimple에서는 수집하지 않음
         privacy: data.privacy
       })
       
-      // 항상 성공으로 처리 (임시 수정)
-      // 폼 초기화
-      reset()
-      
-      // 성공 모달 표시
-      setShowSuccessModal(true)
-      
-      // 토스트 메시지
-      toast.success("상담 신청이 완료되었습니다.")
+      if (result.success) {
+        // 폼 초기화
+        reset()
+        
+        // 성공 모달 표시
+        setShowSuccessModal(true)
+        
+        // 토스트 메시지
+        toast.success(result.message || "상담 신청이 완료되었습니다.")
+      } else {
+        toast.error(result.error || "상담 신청 중 오류가 발생했습니다.")
+      }
     } catch (error) {
       console.error("Form submission error:", error)
-      
-      // 오류가 발생해도 성공으로 처리 (임시 수정)
-      reset()
-      setShowSuccessModal(true)
-      toast.success("상담 신청이 완료되었습니다. (테스트 모드)")
+      toast.error("상담 신청 중 오류가 발생했습니다. 다시 시도해주세요.")
     } finally {
       setIsSubmitting(false)
     }
