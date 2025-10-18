@@ -1,17 +1,14 @@
 import AlarmSection from "@/components/AlarmSection"
 import ReviewSection from "@/components/ReviewSection"
-import Diffrents from "@/components/Diffrents"
 import Confidence from "@/components/Confidence"
 import Service from "@/components/Service"
 import CheckList from "@/components/CheckList"
-import BrandSection from "@/components/BrandSection"
 import CharmingOffer from "@/components/CharmingOffer"
 import EssentialBanner from "@/components/EssentialBanner"
 import FAQSection from "@/components/FAQSection"
 import ContactFormSimple from "@/components/ContactFormSimple"
 import Footer from "@/components/Footer"
 import FloatingButton from "@/components/FloatingButton"
-import FeatureExplanation from "@/components/FeatureExplanation"
 
 export default function Home() {
   return (
