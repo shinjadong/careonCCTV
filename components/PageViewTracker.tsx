@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { collectPageViewData } from "@/lib/tracking"
+import { collectPageViewData, saveCurrentPageAsPrevious } from "@/lib/tracking"
 import { trackPageView } from "@/app/actions/submit"
 
 /**
@@ -27,6 +27,10 @@ export default function PageViewTracker() {
 
         if (result.success) {
           console.log('✅ 페이지뷰 추적 성공')
+
+          // 추적 성공 후 현재 페이지를 이전 페이지로 저장
+          // 다음 페이지 이동 시 사용됨
+          saveCurrentPageAsPrevious()
         } else {
           console.warn('⚠️ 페이지뷰 추적 실패 (silent fail)')
         }

@@ -142,6 +142,46 @@ export function getLandingPage(): string {
   }
 }
 
+// 이전 페이지 URL 저장/가져오기 (내부 페이지 이동 추적)
+export function getPreviousPage(): string {
+  if (typeof window === 'undefined') return ''
+
+  const PREVIOUS_KEY = 'previous_page'
+
+  try {
+    // 1순위: localStorage에 저장된 이전 페이지 (사이트 내부 이동)
+    const storedPrevious = localStorage.getItem(PREVIOUS_KEY)
+
+    // 2순위: document.referrer (외부 유입)
+    const referrer = document.referrer
+
+    // 우선순위: 같은 도메인 내부 이동 > 외부 referrer > 직접 접속
+    if (storedPrevious && storedPrevious !== window.location.href) {
+      return storedPrevious
+    } else if (referrer) {
+      return referrer
+    } else {
+      return '직접 접속'
+    }
+  } catch (error) {
+    return document.referrer || '직접 접속'
+  }
+}
+
+// 현재 페이지를 이전 페이지로 저장 (다음 페이지 이동을 위해)
+export function saveCurrentPageAsPrevious(): void {
+  if (typeof window === 'undefined') return
+
+  const PREVIOUS_KEY = 'previous_page'
+  const currentUrl = window.location.href
+
+  try {
+    localStorage.setItem(PREVIOUS_KEY, currentUrl)
+  } catch (error) {
+    console.error('이전 페이지 저장 실패:', error)
+  }
+}
+
 // 모든 페이지뷰 데이터 수집
 export function collectPageViewData(): PageViewData {
   const utmParams = getUTMParams()
@@ -149,7 +189,7 @@ export function collectPageViewData(): PageViewData {
   return {
     timestamp: new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
     current_url: typeof window !== 'undefined' ? window.location.href : '',
-    referrer: typeof window !== 'undefined' ? document.referrer || '직접 접속' : '',
+    referrer: getPreviousPage(), // 개선: localStorage 우선, document.referrer 후순위
     landing_page: getLandingPage(),
     utm_source: utmParams.utm_source,
     utm_medium: utmParams.utm_medium,

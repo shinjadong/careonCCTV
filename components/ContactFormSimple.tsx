@@ -10,7 +10,7 @@ import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { submitConsultation } from "@/app/actions/submit"
 import { formatPhoneNumber } from "@/lib/utils"
-import { getUTMParams, getOrCreateSessionId } from "@/lib/tracking"
+import { getUTMParams, getOrCreateSessionId, getPreviousPage } from "@/lib/tracking"
 import Image from "next/image"
 
 interface PlaceOption {
@@ -52,7 +52,6 @@ const cameraOptions = ["1대", "2대", "3대", "4대", "5대 이상"]
 export default function ContactFormSimple() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
-  const [referrerUrl, setReferrerUrl] = useState<string>("")
 
   const {
     register,
@@ -62,15 +61,6 @@ export default function ContactFormSimple() {
     reset,
     formState: { errors }
   } = useForm()
-
-  // 이전 페이지 URL 캡처
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const referrer = document.referrer || '직접 접속'
-      setReferrerUrl(referrer)
-      console.log('Referrer URL captured:', referrer)
-    }
-  }, [])
 
   // 전화번호 하이픈 자동 추가 핸들러
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,9 +72,10 @@ export default function ContactFormSimple() {
     setIsSubmitting(true)
 
     try {
-      // UTM 파라미터 및 세션 ID 수집
+      // UTM 파라미터, 세션 ID, 이전 페이지 수집
       const utmParams = getUTMParams()
       const sessionId = getOrCreateSessionId()
+      const previousPage = getPreviousPage() // 개선: localStorage 우선
 
       // 서버 액션 호출 (통일된 데이터 구조 + UTM + 세션)
       const result = await submitConsultation({
@@ -98,7 +89,7 @@ export default function ContactFormSimple() {
         cameraCount: data.cameraCount,
         memo: undefined, // ContactFormSimple에서는 수집하지 않음
         privacy: data.privacy,
-        referrer: referrerUrl, // 이전 페이지 URL
+        referrer: previousPage, // 이전 페이지 URL (localStorage 우선)
         utm_source: utmParams.utm_source,
         utm_medium: utmParams.utm_medium,
         utm_campaign: utmParams.utm_campaign,
