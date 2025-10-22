@@ -58,7 +58,7 @@ curl http://localhost:8000/health
 
 ### 1단계: SSH 접속
 ```bash
-ssh -i your-key.pem ubuntu@13.209.135.199
+ssh -i your-key.pem ubuntu@13.125.251.6
 ```
 
 ### 2단계: 프로젝트 클론
@@ -163,10 +163,10 @@ curl -X POST http://localhost:8000/test-sms \
 ### AWS 서버 테스트
 ```bash
 # 헬스 체크
-curl http://13.209.135.199:8000/health
+curl http://13.125.251.6:8000/health
 
 # 견적 신청 SMS 발송
-curl -X POST http://13.209.135.199:8000/send-consultation-sms \
+curl -X POST http://13.125.251.6:8000/send-consultation-sms \
   -H "Content-Type: application/json" \
   -d '{
     "name": "홍길동",
@@ -184,13 +184,13 @@ curl -X POST http://13.209.135.199:8000/send-consultation-sms \
 `.env.local`에 추가:
 ```bash
 # SMS 서버 URL
-SMS_SERVER_URL=http://13.209.135.199:8000
+SMS_SERVER_URL=http://13.125.251.6:8000
 ```
 
 프로덕션 배포 시:
 ```bash
 # Vercel/Netlify 환경변수에 추가
-SMS_SERVER_URL=http://13.209.135.199:8000
+SMS_SERVER_URL=http://13.125.251.6:8000
 ```
 
 ---
@@ -323,7 +323,7 @@ Error: IP가 유효하지 않음
 
 **해결:**
 - 뿌리오 홈페이지 → 문자연동 → 연동 관리
-- AWS EC2 IP 추가: 13.209.135.199
+- AWS EC2 IP 추가: 13.125.251.6
 
 ---
 
@@ -375,7 +375,7 @@ top -p $(pgrep -f "python main.py")
 
 ```bash
 # 1. SSH 접속
-ssh ubuntu@13.209.135.199
+ssh ubuntu@13.125.251.6
 
 # 2. 코드 업데이트
 cd /home/ubuntu/careonCCTV

@@ -63,7 +63,7 @@ export async function submitConsultation(data: {
 
     // SMS 발송 (비동기, 실패해도 견적 신청은 성공)
     try {
-      const smsServerUrl = process.env.SMS_SERVER_URL || 'http://13.209.135.199:8000'
+      const smsServerUrl = process.env.SMS_SERVER_URL || 'http://13.125.251.6:8000'
 
       const smsResponse = await fetch(`${smsServerUrl}/send-consultation-sms`, {
         method: 'POST',
