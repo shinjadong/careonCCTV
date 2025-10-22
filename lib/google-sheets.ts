@@ -21,9 +21,10 @@ export async function appendToGoogleSheet(data: {
   cameraCount: string
   memo?: string
   privacy: boolean
+  referrer?: string
 }) {
   const spreadsheetId = process.env.GOOGLE_SHEET_ID
-  const range = 'A:K'
+  const range = 'A:L'  // K 컬럼에서 L 컬럼으로 확장
 
   const values = [[
     new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
@@ -36,7 +37,8 @@ export async function appendToGoogleSheet(data: {
     data.installationTime || '',
     data.cameraCount,
     data.memo || '',
-    data.privacy ? 'Y' : 'N'
+    data.privacy ? 'Y' : 'N',
+    data.referrer || '직접 접속'  // 새로운 referrer 컬럼 추가
   ]]
 
   try {

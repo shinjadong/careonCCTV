@@ -14,13 +14,17 @@ export async function submitConsultation(data: {
   cameraCount: string
   memo?: string
   privacy: boolean
+  referrer?: string
 }) {
   try {
     // 디버깅 로그
     console.log('견적 신청 데이터 수신:', data)
 
-    // 구글 시트에 데이터 추가
-    await appendToGoogleSheet(data)
+    // 구글 시트에 데이터 추가 (referrer 포함)
+    await appendToGoogleSheet({
+      ...data,
+      referrer: data.referrer || '직접 접속'
+    })
 
     console.log('구글 시트 저장 성공')
 

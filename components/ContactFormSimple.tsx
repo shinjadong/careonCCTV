@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -51,15 +51,25 @@ const cameraOptions = ["1대", "2대", "3대", "4대", "5대 이상"]
 export default function ContactFormSimple() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
-  
-  const { 
-    register, 
-    handleSubmit, 
+  const [referrerUrl, setReferrerUrl] = useState<string>("")
+
+  const {
+    register,
+    handleSubmit,
     setValue,
     watch,
     reset,
-    formState: { errors } 
+    formState: { errors }
   } = useForm()
+
+  // 이전 페이지 URL 캡처
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const referrer = document.referrer || '직접 접속'
+      setReferrerUrl(referrer)
+      console.log('Referrer URL captured:', referrer)
+    }
+  }, [])
 
   // 전화번호 하이픈 자동 추가 핸들러
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,7 +79,7 @@ export default function ContactFormSimple() {
 
   const onSubmit = async (data: any) => {
     setIsSubmitting(true)
-    
+
     try {
       // 서버 액션 호출 (통일된 데이터 구조)
       const result = await submitConsultation({
@@ -82,7 +92,8 @@ export default function ContactFormSimple() {
         installationTime: undefined, // ContactFormSimple에서는 수집하지 않음
         cameraCount: data.cameraCount,
         memo: undefined, // ContactFormSimple에서는 수집하지 않음
-        privacy: data.privacy
+        privacy: data.privacy,
+        referrer: referrerUrl // 이전 페이지 URL 추가
       })
       
       if (result.success) {
