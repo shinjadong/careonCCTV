@@ -17,6 +17,17 @@ export default function PageViewTracker() {
     if (hasTracked.current) return
     hasTracked.current = true
 
+    // 최초 방문 시 referrer를 즉시 localStorage에 저장 (보존)
+    if (typeof window !== 'undefined' && document.referrer) {
+      const INITIAL_REFERRER_KEY = 'initial_referrer'
+      const existingReferrer = localStorage.getItem(INITIAL_REFERRER_KEY)
+
+      if (!existingReferrer) {
+        localStorage.setItem(INITIAL_REFERRER_KEY, document.referrer)
+        console.log('💾 Initial referrer saved:', document.referrer)
+      }
+    }
+
     // 페이지뷰 데이터 수집 및 전송
     const trackView = async () => {
       try {

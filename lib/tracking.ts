@@ -147,23 +147,52 @@ export function getPreviousPage(): string {
   if (typeof window === 'undefined') return ''
 
   const PREVIOUS_KEY = 'previous_page'
+  const INITIAL_REFERRER_KEY = 'initial_referrer'
 
   try {
+    // 현재 URL
+    const currentUrl = window.location.href
+
     // 1순위: localStorage에 저장된 이전 페이지 (사이트 내부 이동)
     const storedPrevious = localStorage.getItem(PREVIOUS_KEY)
 
-    // 2순위: document.referrer (외부 유입)
-    const referrer = document.referrer
+    // 2순위: 최초 방문 시 저장한 referrer
+    const initialReferrer = localStorage.getItem(INITIAL_REFERRER_KEY)
 
-    // 우선순위: 같은 도메인 내부 이동 > 외부 referrer > 직접 접속
-    if (storedPrevious && storedPrevious !== window.location.href) {
+    // 3순위: document.referrer (실시간)
+    const documentReferrer = document.referrer
+
+    console.log('🔍 Referrer 추적:', {
+      storedPrevious,
+      initialReferrer,
+      documentReferrer,
+      currentUrl
+    })
+
+    // 로직: localStorage의 이전 페이지가 있고, 현재 페이지와 다르면 사용
+    if (storedPrevious && storedPrevious !== currentUrl) {
+      console.log('✅ Using stored previous:', storedPrevious)
       return storedPrevious
-    } else if (referrer) {
-      return referrer
-    } else {
-      return '직접 접속'
     }
+
+    // 최초 방문 시 저장한 referrer 사용
+    if (initialReferrer && initialReferrer !== '직접 접속') {
+      console.log('✅ Using initial referrer:', initialReferrer)
+      return initialReferrer
+    }
+
+    // document.referrer 사용
+    if (documentReferrer) {
+      console.log('✅ Using document.referrer:', documentReferrer)
+      // 최초 referrer로 저장 (다음에 사용)
+      localStorage.setItem(INITIAL_REFERRER_KEY, documentReferrer)
+      return documentReferrer
+    }
+
+    console.log('⚠️ No referrer found - 직접 접속')
+    return '직접 접속'
   } catch (error) {
+    console.error('getPreviousPage 오류:', error)
     return document.referrer || '직접 접속'
   }
 }
