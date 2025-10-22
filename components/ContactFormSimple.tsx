@@ -75,36 +75,43 @@ export default function ContactFormSimple() {
       // UTM 파라미터, 세션 ID, 이전 페이지 수집
       const utmParams = getUTMParams()
       const sessionId = getOrCreateSessionId()
-      const previousPage = getPreviousPage() // 개선: localStorage 우선
+      const previousPage = getPreviousPage()
 
-      // 서버 액션 호출 (통일된 데이터 구조 + UTM + 세션)
+      // 서버 액션 호출
       const result = await submitConsultation({
         name: data.name,
         phone: data.phone,
         contactTime: "언제든 가능",
         place: data.place,
-        address: data.region, // region -> address로 매핑
-        installationDate: undefined, // ContactFormSimple에서는 수집하지 않음
-        installationTime: undefined, // ContactFormSimple에서는 수집하지 않음
+        address: data.region,
+        installationDate: undefined,
+        installationTime: undefined,
         cameraCount: data.cameraCount,
-        memo: undefined, // ContactFormSimple에서는 수집하지 않음
+        memo: undefined,
         privacy: data.privacy,
-        referrer: previousPage, // 이전 페이지 URL (localStorage 우선)
+        referrer: previousPage,
         utm_source: utmParams.utm_source,
         utm_medium: utmParams.utm_medium,
         utm_campaign: utmParams.utm_campaign,
         session_id: sessionId
       })
-      
+
       if (result.success) {
         // 폼 초기화
         reset()
-        
+
         // 성공 모달 표시
         setShowSuccessModal(true)
-        
+
+        // 5초 후 자동 닫기
+        setTimeout(() => {
+          setShowSuccessModal(false)
+        }, 5000)
+
         // 토스트 메시지
-        toast.success(result.message || "상담 신청이 완료되었습니다.")
+        toast.success(result.message || "상담 신청이 완료되었습니다.", {
+          duration: 5000
+        })
       } else {
         toast.error(result.error || "상담 신청 중 오류가 발생했습니다.")
       }
@@ -307,15 +314,15 @@ export default function ContactFormSimple() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <Button 
-                  type="submit" 
-                  className="w-full bg-[#E60012] hover:bg-[#FF7A00] text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2"
+                <Button
+                  type="submit"
+                  className="w-full bg-[#E60012] hover:bg-[#FF7A00] text-white font-bold py-4 rounded-lg flex items-center justify-center gap-2 text-lg transition-all shadow-lg hover:shadow-xl"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
                     <>
-                      <div className="animate-spin h-5 w-5 border-2 border-white border-opacity-50 border-t-white rounded-full"></div>
-                      <span>처리중...</span>
+                      <div className="animate-spin h-6 w-6 border-3 border-white border-opacity-30 border-t-white rounded-full"></div>
+                      <span className="animate-pulse">견적 신청 처리 중...</span>
                     </>
                   ) : (
                     <>
@@ -356,30 +363,56 @@ export default function ContactFormSimple() {
             exit={{ opacity: 0 }}
             onClick={() => setShowSuccessModal(false)}
           >
-            <motion.div 
-              className="bg-white rounded-xl p-8 max-w-md w-full"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
+            <motion.div
+              className="bg-white rounded-2xl p-10 max-w-lg w-full shadow-2xl mx-4"
+              initial={{ scale: 0.8, opacity: 0, y: 50 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0, y: 50 }}
+              transition={{ type: "spring", duration: 0.5 }}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="text-center">
-                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                <motion.div
+                  className="w-24 h-24 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                >
+                  <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
                   </svg>
-                </div>
-                <h3 className="text-2xl font-bold mb-4">상담 신청 완료!</h3>
-                <p className="text-gray-600 mb-6">
+                </motion.div>
+                <motion.h3
+                  className="text-3xl font-black mb-4 text-gray-800"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  상담 신청 완료!
+                </motion.h3>
+                <motion.p
+                  className="text-gray-600 mb-8 text-lg leading-relaxed"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                >
                   입력하신 정보로 상담 신청이 완료되었습니다.<br />
-                  전문 상담사가 빠르게 연락 드리겠습니다.
-                </p>
-                <button 
+                  <span className="text-[#E60012] font-semibold">전문 상담사가 빠르게 연락</span> 드리겠습니다.
+                </motion.p>
+                <motion.button
                   onClick={() => setShowSuccessModal(false)}
-                  className="bg-primary text-white font-medium py-2 px-6 rounded-lg hover:bg-primary-dark transition-colors"
+                  className="bg-[#E60012] text-white font-bold py-3 px-8 rounded-lg hover:bg-[#FF7A00] transition-all shadow-md hover:shadow-lg"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   확인
-                </button>
+                </motion.button>
+                <p className="text-xs text-gray-400 mt-4">
+                  5초 후 자동으로 닫힙니다
+                </p>
               </div>
             </motion.div>
           </motion.div>

@@ -61,39 +61,40 @@ export async function submitConsultation(data: {
 
     console.log('구글 시트 및 Supabase 저장 성공')
 
-    // SMS 발송 (비동기, 실패해도 견적 신청은 성공)
-    try {
-      const smsServerUrl = process.env.SMS_SERVER_URL || 'http://13.125.251.6:8000'
+    // SMS 발송 (백그라운드 처리 - await 제거로 속도 개선)
+    const smsServerUrl = process.env.SMS_SERVER_URL || 'http://13.125.251.6:8000'
 
-      const smsResponse = await fetch(`${smsServerUrl}/send-consultation-sms`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: data.name,
-          phone: data.phone,
-          address: data.address,
-          camera_count: data.cameraCount,
-          place: data.place,
-          referrer: data.referrer || '직접 접속',
-          utm_source: data.utm_source,
-          utm_campaign: data.utm_campaign
-        })
+    fetch(`${smsServerUrl}/send-consultation-sms`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: data.name,
+        phone: data.phone,
+        address: data.address,
+        camera_count: data.cameraCount,
+        place: data.place,
+        referrer: data.referrer || '직접 접속',
+        utm_source: data.utm_source,
+        utm_campaign: data.utm_campaign
+      }),
+      signal: AbortSignal.timeout(5000) // 5초 타임아웃
+    })
+      .then(async (response) => {
+        if (response.ok) {
+          const result = await response.json()
+          console.log('✅ 직원 알림 SMS 발송 성공:', result)
+        } else {
+          console.warn('⚠️ 직원 알림 SMS 발송 실패 (silent fail)')
+        }
+      })
+      .catch((error) => {
+        // SMS 발송 실패는 견적 신청을 막지 않음 (백그라운드)
+        console.error('SMS 발송 오류 (silent fail):', error)
       })
 
-      if (smsResponse.ok) {
-        const smsResult = await smsResponse.json()
-        console.log('✅ 직원 알림 SMS 발송 성공:', smsResult)
-      } else {
-        console.warn('⚠️ 직원 알림 SMS 발송 실패 (silent fail)')
-      }
-    } catch (smsError) {
-      // SMS 발송 실패는 견적 신청을 막지 않음
-      console.error('SMS 발송 오류 (silent fail):', smsError)
-    }
-
-    // 성공적으로 처리됨
+    // 데이터 저장 완료 즉시 성공 반환 (SMS 대기 안 함)
     return {
       success: true,
       message: "견적 신청이 완료되었습니다. 빠른 시간 내에 연락드리겠습니다."
