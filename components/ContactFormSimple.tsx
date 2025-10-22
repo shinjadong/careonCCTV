@@ -10,6 +10,7 @@ import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { submitConsultation } from "@/app/actions/submit"
 import { formatPhoneNumber } from "@/lib/utils"
+import { getUTMParams, getOrCreateSessionId } from "@/lib/tracking"
 import Image from "next/image"
 
 interface PlaceOption {
@@ -81,7 +82,11 @@ export default function ContactFormSimple() {
     setIsSubmitting(true)
 
     try {
-      // 서버 액션 호출 (통일된 데이터 구조)
+      // UTM 파라미터 및 세션 ID 수집
+      const utmParams = getUTMParams()
+      const sessionId = getOrCreateSessionId()
+
+      // 서버 액션 호출 (통일된 데이터 구조 + UTM + 세션)
       const result = await submitConsultation({
         name: data.name,
         phone: data.phone,
@@ -93,7 +98,11 @@ export default function ContactFormSimple() {
         cameraCount: data.cameraCount,
         memo: undefined, // ContactFormSimple에서는 수집하지 않음
         privacy: data.privacy,
-        referrer: referrerUrl // 이전 페이지 URL 추가
+        referrer: referrerUrl, // 이전 페이지 URL
+        utm_source: utmParams.utm_source,
+        utm_medium: utmParams.utm_medium,
+        utm_campaign: utmParams.utm_campaign,
+        session_id: sessionId
       })
       
       if (result.success) {
