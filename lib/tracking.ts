@@ -25,9 +25,32 @@ export interface PageViewData {
   browser_language: string
   user_agent: string
 
-  // 기타
+  // 기본
   is_touch_device: boolean
   session_id: string
+
+  // 참여도 지표 (추가)
+  time_on_page?: number // 체류 시간 (초)
+  max_scroll_depth?: number // 최대 스크롤 깊이 (%)
+  scroll_25?: boolean
+  scroll_50?: boolean
+  scroll_75?: boolean
+  scroll_100?: boolean
+  clicks_count?: number
+  form_interactions?: number
+
+  // 네트워크 정보
+  connection_type?: string
+  connection_speed?: string
+
+  // 배터리 정보
+  battery_level?: number
+  is_charging?: boolean
+
+  // 행동 지표
+  page_visibility_changes?: number
+  was_active?: boolean
+  exit_intent?: boolean
 }
 
 // URL에서 UTM 파라미터 추출
@@ -211,9 +234,49 @@ export function saveCurrentPageAsPrevious(): void {
   }
 }
 
-// 모든 페이지뷰 데이터 수집
+// 네트워크 정보 수집
+export function getNetworkInfo(): { connectionType: string; connectionSpeed: string } {
+  if (typeof window === 'undefined' || !('connection' in navigator)) {
+    return { connectionType: '', connectionSpeed: '' }
+  }
+
+  try {
+    const conn = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection
+
+    if (!conn) {
+      return { connectionType: '', connectionSpeed: '' }
+    }
+
+    return {
+      connectionType: conn.type || conn.effectiveType || '',
+      connectionSpeed: conn.effectiveType || ''
+    }
+  } catch (error) {
+    return { connectionType: '', connectionSpeed: '' }
+  }
+}
+
+// 배터리 정보 수집
+export async function getBatteryInfo(): Promise<{ batteryLevel: number; isCharging: boolean }> {
+  if (typeof window === 'undefined' || !('getBattery' in navigator)) {
+    return { batteryLevel: 0, isCharging: false }
+  }
+
+  try {
+    const battery = await (navigator as any).getBattery()
+    return {
+      batteryLevel: Math.round(battery.level * 100),
+      isCharging: battery.charging
+    }
+  } catch (error) {
+    return { batteryLevel: 0, isCharging: false }
+  }
+}
+
+// 모든 페이지뷰 데이터 수집 (기본 + 네트워크)
 export function collectPageViewData(): PageViewData {
   const utmParams = getUTMParams()
+  const networkInfo = getNetworkInfo()
 
   return {
     timestamp: new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
@@ -231,6 +294,146 @@ export function collectPageViewData(): PageViewData {
     browser_language: typeof window !== 'undefined' ? navigator.language : '',
     user_agent: typeof window !== 'undefined' ? navigator.userAgent : '',
     is_touch_device: isTouchDevice(),
-    session_id: getOrCreateSessionId()
+    session_id: getOrCreateSessionId(),
+
+    // 네트워크 정보
+    connection_type: networkInfo.connectionType,
+    connection_speed: networkInfo.connectionSpeed,
+
+    // 참여도 지표는 나중에 업데이트됨
+    time_on_page: 0,
+    max_scroll_depth: 0,
+    scroll_25: false,
+    scroll_50: false,
+    scroll_75: false,
+    scroll_100: false,
+    clicks_count: 0,
+    form_interactions: 0,
+    page_visibility_changes: 0,
+    was_active: true,
+    exit_intent: false
+  }
+}
+
+// 사용자 참여도 추적 클래스
+export class EngagementTracker {
+  private startTime: number
+  private maxScrollDepth: number = 0
+  private scrollMilestones: { [key: number]: boolean } = {
+    25: false,
+    50: false,
+    75: false,
+    100: false
+  }
+  private clicksCount: number = 0
+  private formInteractions: number = 0
+  private visibilityChanges: number = 0
+  private wasActive: boolean = true
+  private exitIntent: boolean = false
+  private listeners: (() => void)[] = []
+
+  constructor() {
+    this.startTime = Date.now()
+    this.setupListeners()
+  }
+
+  private setupListeners() {
+    if (typeof window === 'undefined') return
+
+    // 스크롤 추적
+    const handleScroll = () => {
+      const scrollDepth = this.calculateScrollDepth()
+      if (scrollDepth > this.maxScrollDepth) {
+        this.maxScrollDepth = scrollDepth
+
+        // 마일스톤 체크
+        ;[25, 50, 75, 100].forEach(milestone => {
+          if (scrollDepth >= milestone && !this.scrollMilestones[milestone]) {
+            this.scrollMilestones[milestone] = true
+            console.log(`📍 스크롤 ${milestone}% 도달`)
+          }
+        })
+      }
+    }
+
+    // 클릭 추적
+    const handleClick = () => {
+      this.clicksCount++
+    }
+
+    // 폼 인터랙션 추적
+    const handleFormInteraction = (e: Event) => {
+      const target = e.target as HTMLElement
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
+        this.formInteractions++
+      }
+    }
+
+    // 페이지 가시성 변경 추적
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        this.visibilityChanges++
+        this.wasActive = false
+      }
+    }
+
+    // 이탈 의도 감지 (마우스가 브라우저 상단으로)
+    const handleMouseOut = (e: MouseEvent) => {
+      if (e.clientY <= 0 && !this.exitIntent) {
+        this.exitIntent = true
+        console.log('⚠️ 이탈 의도 감지')
+      }
+    }
+
+    // 이벤트 리스너 등록
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    document.addEventListener('click', handleClick)
+    document.addEventListener('focus', handleFormInteraction, true)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    document.addEventListener('mouseout', handleMouseOut)
+
+    // cleanup 함수 저장
+    this.listeners.push(() => {
+      window.removeEventListener('scroll', handleScroll)
+      document.removeEventListener('click', handleClick)
+      document.removeEventListener('focus', handleFormInteraction, true)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      document.removeEventListener('mouseout', handleMouseOut)
+    })
+  }
+
+  private calculateScrollDepth(): number {
+    const windowHeight = window.innerHeight
+    const documentHeight = document.documentElement.scrollHeight
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+
+    const scrollableHeight = documentHeight - windowHeight
+    if (scrollableHeight <= 0) return 100
+
+    return Math.round((scrollTop / scrollableHeight) * 100)
+  }
+
+  // 현재 참여도 데이터 가져오기
+  public getEngagementData() {
+    const timeOnPage = Math.round((Date.now() - this.startTime) / 1000)
+
+    return {
+      time_on_page: timeOnPage,
+      max_scroll_depth: this.maxScrollDepth,
+      scroll_25: this.scrollMilestones[25],
+      scroll_50: this.scrollMilestones[50],
+      scroll_75: this.scrollMilestones[75],
+      scroll_100: this.scrollMilestones[100],
+      clicks_count: this.clicksCount,
+      form_interactions: this.formInteractions,
+      page_visibility_changes: this.visibilityChanges,
+      was_active: this.wasActive,
+      exit_intent: this.exitIntent
+    }
+  }
+
+  // 리스너 정리
+  public cleanup() {
+    this.listeners.forEach(cleanup => cleanup())
   }
 }

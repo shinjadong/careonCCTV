@@ -63,6 +63,30 @@ export interface PageViewRecord {
   user_agent?: string
   is_touch_device?: boolean
   session_id?: string
+
+  // 참여도 지표
+  time_on_page?: number
+  max_scroll_depth?: number
+  scroll_25?: boolean
+  scroll_50?: boolean
+  scroll_75?: boolean
+  scroll_100?: boolean
+  clicks_count?: number
+  form_interactions?: number
+
+  // 네트워크 정보
+  connection_type?: string
+  connection_speed?: string
+
+  // 배터리 정보
+  battery_level?: number
+  is_charging?: boolean
+
+  // 행동 지표
+  page_visibility_changes?: number
+  was_active?: boolean
+  exit_intent?: boolean
+
   created_at?: string
 }
 
