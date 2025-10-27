@@ -279,7 +279,7 @@ export function collectPageViewData(): PageViewData {
   const networkInfo = getNetworkInfo()
 
   return {
-    timestamp: new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
+    timestamp: new Date().toISOString(),
     current_url: typeof window !== 'undefined' ? window.location.href : '',
     referrer: getPreviousPage(), // 개선: localStorage 우선, document.referrer 후순위
     landing_page: getLandingPage(),

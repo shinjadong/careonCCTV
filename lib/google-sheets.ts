@@ -28,7 +28,7 @@ export async function appendToGoogleSheet(data: {
   const range = 'A:L'  // K 컬럼에서 L 컬럼으로 확장
 
   const values = [[
-    new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
+    new Date().toISOString(),
     data.name,
     data.phone,
     data.contactTime,
@@ -117,9 +117,17 @@ export async function appendPageViewToGoogleSheet(data: PageViewData) {
       },
     })
 
+    console.log('✅ 페이지뷰 데이터 Google Sheets 저장 성공')
     return { success: true, response }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error appending page view to Google Sheet:', error)
+
+    // 시트가 없는 경우 안내 메시지 출력
+    if (error?.message?.includes('Unable to parse range')) {
+      console.warn(`⚠️ Google Sheets에 "${range.split('!')[0]}" 시트가 없습니다.`)
+      console.warn('페이지뷰 데이터를 저장하려면 해당 시트를 생성해주세요.')
+    }
+
     throw error
   }
 }

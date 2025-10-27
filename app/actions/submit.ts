@@ -3,7 +3,6 @@
 import { appendToGoogleSheet, appendPageViewToGoogleSheet } from "@/lib/google-sheets"
 import { insertPageView, insertKTCCTVConsultation } from "@/lib/supabase"
 import { PageViewData } from "@/lib/tracking"
-import { getUTMParams } from "@/lib/tracking"
 
 // 견적 신청 제출 함수 (구글 시트 + Supabase)
 export async function submitConsultation(data: {
@@ -63,6 +62,8 @@ export async function submitConsultation(data: {
 
     // SMS 발송 (백그라운드 처리 - await 제거로 속도 개선)
     const smsServerUrl = process.env.SMS_SERVER_URL || 'http://13.125.251.6:8000'
+    console.log(`📱 SMS 서버 URL: ${smsServerUrl}`)
+    console.log(`📤 SMS 발송 시도 중...`)
 
     fetch(`${smsServerUrl}/send-consultation-sms`, {
       method: 'POST',
@@ -85,13 +86,16 @@ export async function submitConsultation(data: {
         if (response.ok) {
           const result = await response.json()
           console.log('✅ 직원 알림 SMS 발송 성공:', result)
+          console.log(`📊 SMS 응답 상태: ${response.status} ${response.statusText}`)
         } else {
-          console.warn('⚠️ 직원 알림 SMS 발송 실패 (silent fail)')
+          console.warn(`⚠️ 직원 알림 SMS 발송 실패 (HTTP ${response.status})`)
+          console.warn(`응답 내용:`, await response.text().catch(() => 'unknown'))
         }
       })
       .catch((error) => {
         // SMS 발송 실패는 견적 신청을 막지 않음 (백그라운드)
-        console.error('SMS 발송 오류 (silent fail):', error)
+        console.error('❌ SMS 발송 오류 (silent fail):', error)
+        console.error(`오류 타입: ${error.name}, 메시지: ${error.message}`)
       })
 
     // 데이터 저장 완료 즉시 성공 반환 (SMS 대기 안 함)
