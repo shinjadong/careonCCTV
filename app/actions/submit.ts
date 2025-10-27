@@ -60,12 +60,12 @@ export async function submitConsultation(data: {
 
     console.log('구글 시트 및 Supabase 저장 성공')
 
-    // SMS 발송 (백그라운드 처리 - await 제거로 속도 개선)
+    // SMS 발송 (비동기 처리 - 최대 3초 대기)
     const smsServerUrl = process.env.SMS_SERVER_URL || 'http://13.125.251.6:8000'
     console.log(`📱 SMS 서버 URL: ${smsServerUrl}`)
     console.log(`📤 SMS 발송 시도 중...`)
 
-    fetch(`${smsServerUrl}/send-consultation-sms`, {
+    const smsPromise = fetch(`${smsServerUrl}/send-consultation-sms`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -93,12 +93,18 @@ export async function submitConsultation(data: {
         }
       })
       .catch((error) => {
-        // SMS 발송 실패는 견적 신청을 막지 않음 (백그라운드)
+        // SMS 발송 실패는 견적 신청을 막지 않음
         console.error('❌ SMS 발송 오류 (silent fail):', error)
         console.error(`오류 타입: ${error.name}, 메시지: ${error.message}`)
       })
 
-    // 데이터 저장 완료 즉시 성공 반환 (SMS 대기 안 함)
+    // SMS 요청 시작을 보장하기 위해 최대 3초 대기 (타임아웃 시 무시)
+    await Promise.race([
+      smsPromise,
+      new Promise(resolve => setTimeout(resolve, 3000))
+    ])
+
+    // 데이터 저장 완료 후 성공 반환
     return {
       success: true,
       message: "견적 신청이 완료되었습니다. 빠른 시간 내에 연락드리겠습니다."
