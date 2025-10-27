@@ -61,7 +61,13 @@ export async function submitConsultation(data: {
     console.log('구글 시트 및 Supabase 저장 성공')
 
     // SMS 발송 (비동기 처리 - 최대 3초 대기)
-    const smsServerUrl = process.env.SMS_SERVER_URL || 'http://13.125.251.6:8000'
+    let smsServerUrl = process.env.SMS_SERVER_URL || 'http://13.125.251.6:8000'
+
+    // http:// 또는 https:// 프로토콜이 없으면 자동 추가
+    if (!smsServerUrl.startsWith('http://') && !smsServerUrl.startsWith('https://')) {
+      smsServerUrl = `http://${smsServerUrl}`
+    }
+
     console.log(`📱 SMS 서버 URL: ${smsServerUrl}`)
     console.log(`📤 SMS 발송 시도 중...`)
 
